@@ -1,0 +1,81 @@
+---
+title: "sta457final"
+output: html_document
+---
+
+```{r}
+library(astsa)
+```
+
+
+```{r}
+length(qintr)
+```
+
+
+```{r}
+plot(qintr, xlab="Date", ylab="Quarterly Interest Rate",
+     col="blue", main="Quarterly Interest Rate Recorded for US Treasury Bills from 1953 to 1980")
+
+acf2(qintr, 50)
+```
+```{r}
+diffa <- diff(log(qintr))
+
+plot(diffa, xlab="Year", ylab="percentage",
+     col="blue", main="Growth Rate of Interest Rate")
+
+acf2(diffa, main ="ACF and PACF Plots after Adjustment", max.lag =50)
+```
+
+```{r}
+sarima(diff(log(qintr)),2,1,2)
+```
+```{r}
+sarima(diff(log(qintr)),2,1,0)
+```
+$$
+\hat{x}_t = 0.98(1-0.3236-0.0001) + 0.3236\hat{x}_{t-1} + 0.0001\hat{x}_{t-2} + \hat{w}_t
+$$
+
+```{r}
+sarima(diff(log(qintr)),0,1,2)
+``` 
+$$
+\hat{x}_t = 0.9805 + 0.0003\hat{w}_{t-1} + 0.0001\hat{w}_{t-2} + \hat{w}_t
+$$
+
+
+```{r}
+preda <-sarima.for(qintr,10,0,1,2)
+
+year <-c(1:10)
+upper <-preda$pred + qnorm(0.975)*preda$se
+lower <-preda$pred - qnorm(0.975)*preda$se 
+
+(data.frame("Prediction"=exp(preda$pred),"PI 95% Lower Bound"=exp(lower),"PI 95% Upper Bound"=exp(upper)))
+```
+```{r}
+qintr.per =mvspec(qintr, log="no")
+qintr.per$details
+qintr.per$details[order(qintr.per$details[,3], decreasing = TRUE),]
+qintr.per$freq[c(6,5,9)] #frequency
+1/qintr.per$freq[c(6,5,9)] #period
+```
+
+
+```{r}
+U = qchisq(.025,2)
+L = qchisq(.975,2)
+
+2*qintr.per$spec[6]/L
+2*qintr.per$spec[6]/U
+
+2*qintr.per$spec[5]/L
+2*qintr.per$spec[5]/U
+
+2*qintr.per$spec[9]/L
+2*qintr.per$spec[9]/U
+```
+
+
